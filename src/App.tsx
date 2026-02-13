@@ -120,25 +120,59 @@ const ParticleBackground: React.FC = () => {
   return <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-0" />;
 };
 
+// --- FIXED LOADING SCREEN (Seamless, No Line) ---
 const LoadingScreen: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const topPanelRef = useRef<HTMLDivElement>(null);
+  const bottomPanelRef = useRef<HTMLDivElement>(null);
+  const textContainerRef = useRef<HTMLDivElement>(null);
 
   const handleTextComplete = () => {
-    gsap.to(containerRef.current, {
-      yPercent: -100,
-      duration: 1.2,
-      delay: 0.5,
-      ease: 'power4.inOut',
+    const tl = gsap.timeline({
       onComplete: () => {
         if (containerRef.current) containerRef.current.style.display = 'none';
         onComplete();
       }
     });
+
+    // 1. Text zooms in slightly and fades out
+    tl.to(textContainerRef.current, {
+      scale: 1.2,
+      opacity: 0,
+      filter: 'blur(10px)',
+      duration: 0.8,
+      ease: 'power2.in'
+    })
+    // 2. The Gates Open
+    .to(topPanelRef.current, {
+      yPercent: -100,
+      duration: 1.5,
+      ease: 'power4.inOut'
+    }, '-=0.4')
+    .to(bottomPanelRef.current, {
+      yPercent: 100,
+      duration: 1.5,
+      ease: 'power4.inOut'
+    }, '<');
   };
 
   return (
-    <div ref={containerRef} className="fixed inset-0 z-[9999] bg-slate-950 flex flex-col items-center justify-center p-4">
-      <div className="text-center w-full max-w-lg px-4">
+    <div ref={containerRef} className="fixed inset-0 z-[9999] flex items-center justify-center">
+      
+      {/* Top Gate - Height increased to 50.5vh to overlap and hide gap line */}
+      <div 
+        ref={topPanelRef} 
+        className="absolute top-0 left-0 w-full h-[50.5vh] bg-slate-950 z-10"
+      ></div>
+
+      {/* Bottom Gate - Height increased to 50.5vh to overlap */}
+      <div 
+        ref={bottomPanelRef} 
+        className="absolute bottom-0 left-0 w-full h-[50.5vh] bg-slate-950 z-10"
+      ></div>
+
+      {/* Text Content */}
+      <div ref={textContainerRef} className="relative z-20 text-center w-full max-w-lg px-4">
         <p className="text-teal-500/60 text-[10px] md:text-xs tracking-[0.3em] font-bold mb-4 animate-pulse">
           LOADING EXPERIENCE
         </p>
@@ -154,8 +188,10 @@ const LoadingScreen: React.FC<{ onComplete: () => void }> = ({ onComplete }) => 
   );
 };
 
+// --- NAVBAR ---
 const Navbar: React.FC = () => (
   <nav className="fixed top-0 left-0 right-0 p-4 md:p-8 flex justify-between items-start z-50 mix-blend-difference text-white w-full">
+    
     <div className="flex flex-col group cursor-pointer">
       <div className="flex items-center gap-2">
         <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-teal-400 rounded-full animate-pulse shadow-[0_0_10px_#2dd4bf]"></div>
@@ -167,6 +203,7 @@ const Navbar: React.FC = () => (
         INSTITUTION
       </span>
     </div>
+
     <div className="flex flex-col items-end">
        <span className="font-cinzel text-base md:text-xl font-bold text-white/90">2026</span>
        <span className="text-[8px] md:text-[10px] tracking-widest text-teal-400 uppercase text-right">Freshers</span>
@@ -212,7 +249,7 @@ function App() {
   const stage1Ref = useRef<HTMLElement>(null);
   const stage2Ref = useRef<HTMLElement>(null);
   const stage3Ref = useRef<HTMLElement>(null);
-  const cardRef = useRef<HTMLDivElement>(null); // Ref for the glass card
+  const cardRef = useRef<HTMLDivElement>(null); 
 
   useEffect(() => {
     const lenis = new Lenis({
@@ -289,7 +326,6 @@ function App() {
         });
         tl3.from('.stage-3-sun', { y: 100, opacity: 0 })
            .from('.stage-3-text', { y: 30, opacity: 0 }, '<0.2')
-           // Glassy Card "Lift" Animation
            .fromTo(cardRef.current, 
               { y: 100, opacity: 0, rotateX: 20 }, 
               { y: 0, opacity: 1, rotateX: 0, duration: 1.5, ease: 'power3.out' }, 
@@ -384,7 +420,6 @@ function App() {
                 Go heal the world. Your ocean awaits.
               </p>
               
-              {/* GLASS CARD WITH LIFT EFFECT */}
               <div className="perspective-1000 inline-block w-full max-w-2xl px-4">
                 <div 
                   ref={cardRef}
@@ -402,7 +437,6 @@ function App() {
             </div>
           </div>
 
-          {/* CREDITS SECTION */}
           <footer className="w-full py-8 text-center text-slate-500 text-[10px] md:text-xs bg-slate-950/50 backdrop-blur-sm relative z-20 font-sans border-t border-slate-800/50">
             <div className="flex flex-col gap-2 items-center justify-center">
               <p className="tracking-widest uppercase opacity-70">
